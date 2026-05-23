@@ -3,12 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <title>간단 수식 공유기</title>
+
   <script>
     window.MathJax = {
       loader: { load: ['input/asciimath', 'output/chtml'] }
     };
   </script>
+
   <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <!-- html2canvas 추가 -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
   <style>
     body {
       font-family: sans-serif;
@@ -26,7 +32,9 @@
       border: 1px solid #ddd;
       min-height: 40px;
       background: #f9f9f9;
-      padding: 10px;
+      padding: 20px;
+      border-radius: 10px;
+      overflow-x: auto;
     }
 
     #output:focus {
@@ -35,8 +43,23 @@
 
     .toolbar {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #4a6cf7;
+      color: white;
+      font-size: 14px;
+    }
+
+    button:hover {
+      opacity: 0.9;
     }
 
     .hint-box {
@@ -63,24 +86,36 @@
     }
   </style>
 </head>
+
 <body>
   <h2>간단 수식 입력기 (AsciiMath)</h2>
-  <textarea id="input" rows="3" onchange="render()">a/b + sqrt(4)</textarea>
+
+  <textarea id="input" rows="3" oninput="render()">a/b + sqrt(4)</textarea>
+
   <div class="toolbar">
-    <div>
-      <button onclick="copyURL()">🔗 URL 복사</button>
-    </div>
+    <button onclick="copyURL()">🔗 URL 복사</button>
+    <button onclick="saveImage()">🖼️ 이미지 저장</button>
   </div>
 
   <h3>수식 결과:</h3>
-  <div id="output" class="editable">`a/b + sqrt(4)`</div>
+
+  <!-- 캡처 영역 -->
+  <div id="captureArea">
+    <div id="output" class="editable">`a/b + sqrt(4)`</div>
+  </div>
 
   <div class="hint-box">
     <h4>📘 자주 쓰는 수식 문법</h4>
+
     <table>
       <thead>
-        <tr><th>의미</th><th>입력</th><th>예시</th></tr>
+        <tr>
+          <th>의미</th>
+          <th>입력</th>
+          <th>예시</th>
+        </tr>
       </thead>
+
       <tbody>
         <tr><td>분수</td><td>a/b</td><td>`a/b`</td></tr>
         <tr><td>제곱</td><td>x^2</td><td>`x^2`</td></tr>
@@ -88,34 +123,61 @@
         <tr><td>n제곱근</td><td>root(3)(8)</td><td>`root(3)(8)`</td></tr>
         <tr><td>괄호</td><td>(a+b)/(c+d)</td><td>`(a+b)/(c+d)`</td></tr>
         <tr><td>π, ∞</td><td>pi, oo</td><td>`pi, oo`</td></tr>
-        <tr><td>→, ⇔</td><td>->, <=></td><td>`->, <=>`</td></tr>
+        <tr><td>→, ⇔</td><td>->, <=> </td><td>`->, <=>`</td></tr>
       </tbody>
     </table>
   </div>
 
   <script>
-    function render() {
+    async function render() {
       const val = document.getElementById("input").value;
       const output = document.getElementById("output");
+
       output.textContent = "`" + val + "`";
-      MathJax.typesetPromise();
+
+      await MathJax.typesetPromise([output]);
     }
 
     function copyURL() {
       const val = document.getElementById("input").value;
-      const url = `${location.origin}${location.pathname}?q=${encodeURIComponent(val)}`;
+
+      const url =
+        `${location.origin}${location.pathname}?q=${encodeURIComponent(val)}`;
+
       navigator.clipboard.writeText(url);
+
       alert("URL 복사됨!");
     }
 
-    window.onload = () => {
+    async function saveImage() {
+      const target = document.getElementById("captureArea");
+
+      // 렌더 완료 대기
+      await MathJax.typesetPromise();
+
+      const canvas = await html2canvas(target, {
+        backgroundColor: "#ffffff",
+        scale: 2
+      });
+
+      const link = document.createElement("a");
+
+      link.download = "formula.png";
+      link.href = canvas.toDataURL("image/png");
+
+      link.click();
+    }
+
+    window.onload = async () => {
       const params = new URLSearchParams(location.search);
+
       if (params.get("q")) {
         const decoded = decodeURIComponent(params.get("q"));
+
         document.getElementById("input").value = decoded;
-        document.getElementById("output").textContent = "`" + decoded + "`";
-        MathJax.typesetPromise();
       }
+
+      await render();
     };
   </script>
 </body>
