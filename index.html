@@ -5,20 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>간단 수식 공유기</title>
 
-  <!-- MathJax -->
+  <!-- MathJax SVG 모드 -->
   <script>
     window.MathJax = {
       loader: {
-        load: ['input/asciimath', 'output/chtml']
+        load: ['input/asciimath', 'output/svg']
+      },
+      svg: {
+        fontCache: 'global'
       }
     };
   </script>
 
-  <script async
-    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  <script
+    async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/startup.js">
   </script>
 
-  <!-- html2canvas -->
+  <!-- 이미지 저장 -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <style>
@@ -35,9 +39,9 @@
     textarea {
       width: 100%;
       font-size: 16px;
-      padding: 10px;
+      padding: 12px;
       box-sizing: border-box;
-      border-radius: 10px;
+      border-radius: 12px;
       border: 1px solid #ccc;
       resize: vertical;
     }
@@ -64,23 +68,32 @@
       opacity: 0.9;
     }
 
+    h3 {
+      margin-bottom: 10px;
+    }
+
     /* 캡처 영역 */
     #captureArea {
       display: inline-block;
       background: white;
       padding: 24px;
-      border-radius: 16px;
+      border-radius: 18px;
       border: 1px solid #ddd;
-      max-width: 100%;
       overflow-x: auto;
+      max-width: 100%;
     }
 
     /* 수식 출력 */
     #output {
       display: inline-block;
-      min-height: 40px;
       font-size: 36px;
       line-height: 1.6;
+      min-height: 50px;
+    }
+
+    /* SVG 안정화 */
+    #output svg {
+      overflow: visible;
     }
 
     .hint-box {
@@ -195,15 +208,18 @@
       const input = document.getElementById("input").value;
       const output = document.getElementById("output");
 
-      // AsciiMath
-      output.innerHTML = "`" + input + "`";
+      // 기존 내용 제거
+      output.innerHTML = "";
 
-      // 기존 렌더 제거
-      if (window.MathJax.typesetClear) {
-        MathJax.typesetClear([output]);
-      }
+      // AsciiMath 삽입
+      const script = document.createElement("script");
 
-      // 새 렌더
+      script.type = "math/asciimath";
+      script.text = input;
+
+      output.appendChild(script);
+
+      // MathJax 렌더
       await MathJax.typesetPromise([output]);
     }
 
@@ -221,11 +237,8 @@
     async function saveImage() {
       const target = document.getElementById("captureArea");
 
-      // MathJax 렌더 완료 보장
-      await MathJax.typesetPromise([target]);
-
-      // 렌더 안정화 대기
-      await new Promise(resolve => setTimeout(resolve, 120));
+      // 렌더 안정화
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       const canvas = await html2canvas(target, {
         backgroundColor: "#ffffff",
