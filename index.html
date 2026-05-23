@@ -1,44 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>간단 수식 공유기</title>
 
+  <!-- MathJax -->
   <script>
     window.MathJax = {
-      loader: { load: ['input/asciimath', 'output/chtml'] }
+      loader: {
+        load: ['input/asciimath', 'output/chtml']
+      }
     };
   </script>
 
-  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
 
-  <!-- html2canvas 추가 -->
+  <!-- html2canvas -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <style>
     body {
       font-family: sans-serif;
       margin: 20px;
+      background: #fafafa;
     }
 
-    textarea, .editable {
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    textarea {
       width: 100%;
       font-size: 16px;
-      padding: 8px;
+      padding: 10px;
       box-sizing: border-box;
-    }
-
-    .editable {
-      border: 1px solid #ddd;
-      min-height: 40px;
-      background: #f9f9f9;
-      padding: 20px;
       border-radius: 10px;
-      overflow-x: auto;
-    }
-
-    #output:focus {
-      outline: none;
+      border: 1px solid #ccc;
+      resize: vertical;
     }
 
     .toolbar {
@@ -49,24 +50,45 @@
     }
 
     button {
-      padding: 8px 14px;
       border: none;
-      border-radius: 8px;
+      padding: 10px 16px;
+      border-radius: 10px;
       cursor: pointer;
-      background: #4a6cf7;
-      color: white;
       font-size: 14px;
+      background: #4f46e5;
+      color: white;
+      transition: 0.2s;
     }
 
     button:hover {
       opacity: 0.9;
     }
 
+    /* 캡처 영역 */
+    #captureArea {
+      display: inline-block;
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid #ddd;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    /* 수식 출력 */
+    #output {
+      display: inline-block;
+      min-height: 40px;
+      font-size: 36px;
+      line-height: 1.6;
+    }
+
     .hint-box {
       margin-top: 40px;
       background: #f4f4f4;
       padding: 15px;
-      border-left: 4px solid #aaa;
+      border-left: 4px solid #999;
+      border-radius: 10px;
       font-size: 14px;
     }
 
@@ -75,22 +97,28 @@
       border-collapse: collapse;
     }
 
-    .hint-box th, .hint-box td {
+    .hint-box th,
+    .hint-box td {
       border: 1px solid #ccc;
-      padding: 6px;
+      padding: 8px;
       text-align: left;
     }
 
     .hint-box th {
-      background-color: #eee;
+      background: #eaeaea;
     }
   </style>
 </head>
 
 <body>
+
   <h2>간단 수식 입력기 (AsciiMath)</h2>
 
-  <textarea id="input" rows="3" oninput="render()">a/b + sqrt(4)</textarea>
+  <textarea
+    id="input"
+    rows="3"
+    oninput="render()"
+  >a/b + sqrt(4)</textarea>
 
   <div class="toolbar">
     <button onclick="copyURL()">🔗 URL 복사</button>
@@ -99,9 +127,9 @@
 
   <h3>수식 결과:</h3>
 
-  <!-- 캡처 영역 -->
+  <!-- 이미지 저장 대상 -->
   <div id="captureArea">
-    <div id="output" class="editable">`a/b + sqrt(4)`</div>
+    <div id="output"></div>
   </div>
 
   <div class="hint-box">
@@ -117,24 +145,65 @@
       </thead>
 
       <tbody>
-        <tr><td>분수</td><td>a/b</td><td>`a/b`</td></tr>
-        <tr><td>제곱</td><td>x^2</td><td>`x^2`</td></tr>
-        <tr><td>루트</td><td>sqrt(4)</td><td>`sqrt(4)`</td></tr>
-        <tr><td>n제곱근</td><td>root(3)(8)</td><td>`root(3)(8)`</td></tr>
-        <tr><td>괄호</td><td>(a+b)/(c+d)</td><td>`(a+b)/(c+d)`</td></tr>
-        <tr><td>π, ∞</td><td>pi, oo</td><td>`pi, oo`</td></tr>
-        <tr><td>→, ⇔</td><td>->, <=> </td><td>`->, <=>`</td></tr>
+        <tr>
+          <td>분수</td>
+          <td>a/b</td>
+          <td>`a/b`</td>
+        </tr>
+
+        <tr>
+          <td>제곱</td>
+          <td>x^2</td>
+          <td>`x^2`</td>
+        </tr>
+
+        <tr>
+          <td>루트</td>
+          <td>sqrt(4)</td>
+          <td>`sqrt(4)`</td>
+        </tr>
+
+        <tr>
+          <td>n제곱근</td>
+          <td>root(3)(8)</td>
+          <td>`root(3)(8)`</td>
+        </tr>
+
+        <tr>
+          <td>괄호</td>
+          <td>(a+b)/(c+d)</td>
+          <td>`(a+b)/(c+d)`</td>
+        </tr>
+
+        <tr>
+          <td>π, ∞</td>
+          <td>pi, oo</td>
+          <td>`pi, oo`</td>
+        </tr>
+
+        <tr>
+          <td>→, ⇔</td>
+          <td>->, <=> </td>
+          <td>`->, <=>`</td>
+        </tr>
       </tbody>
     </table>
   </div>
 
   <script>
     async function render() {
-      const val = document.getElementById("input").value;
+      const input = document.getElementById("input").value;
       const output = document.getElementById("output");
 
-      output.textContent = "`" + val + "`";
+      // AsciiMath
+      output.innerHTML = "`" + input + "`";
 
+      // 기존 렌더 제거
+      if (window.MathJax.typesetClear) {
+        MathJax.typesetClear([output]);
+      }
+
+      // 새 렌더
       await MathJax.typesetPromise([output]);
     }
 
@@ -152,12 +221,16 @@
     async function saveImage() {
       const target = document.getElementById("captureArea");
 
-      // 렌더 완료 대기
-      await MathJax.typesetPromise();
+      // MathJax 렌더 완료 보장
+      await MathJax.typesetPromise([target]);
+
+      // 렌더 안정화 대기
+      await new Promise(resolve => setTimeout(resolve, 120));
 
       const canvas = await html2canvas(target, {
         backgroundColor: "#ffffff",
-        scale: 2
+        scale: 3,
+        useCORS: true
       });
 
       const link = document.createElement("a");
@@ -171,14 +244,16 @@
     window.onload = async () => {
       const params = new URLSearchParams(location.search);
 
-      if (params.get("q")) {
-        const decoded = decodeURIComponent(params.get("q"));
+      const q = params.get("q");
 
-        document.getElementById("input").value = decoded;
+      if (q) {
+        document.getElementById("input").value =
+          decodeURIComponent(q);
       }
 
       await render();
     };
   </script>
+
 </body>
 </html>
